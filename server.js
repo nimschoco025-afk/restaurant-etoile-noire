@@ -9,11 +9,17 @@ const port = process.env.PORT || 3000;
 // ============================================
 //  1. CONNEXION MQTT (réception des frames)
 // ============================================
-const MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
-const MQTT_TOPIC = 'restaurant/camera/frame';
+// ===== CONNEXION HIVEMQ =====
+const MQTT_BROKER = 'wss://<TON_URL>.hivemq.cloud:8884/mqtt';
+const MQTT_TOPIC = '#';
+const MQTT_USERNAME = 'Étoile-Noire';           // ← le nom d'utilisateur que tu as créé
+const MQTT_PASSWORD = 'choco@2026'; // ← le mot de passe que tu as défini
 
 console.log('🔌 Connexion au broker MQTT...');
-const mqttClient = mqtt.connect(MQTT_BROKER);
+const mqttClient = mqtt.connect(MQTT_BROKER, {
+    username: MQTT_USERNAME,
+    password: MQTT_PASSWORD
+});
 
 let latestFrame = null;
 let clients = [];
@@ -57,7 +63,7 @@ app.use(express.static('public'));
 // ============================================
 // CHANGEZ LE MOT DE PASSE ICI !
 const ADMIN_USER = 'admin';
-const ADMIN_PASSWORD = 'votre_mot_de_passe_admin';  // ← MODIFIEZ-MOI !
+const ADMIN_PASSWORD = 'choco@2026';  // ← MODIFIEZ-MOI !
 
 app.use('/admin', basicAuth({
     users: { [ADMIN_USER]: ADMIN_PASSWORD },
