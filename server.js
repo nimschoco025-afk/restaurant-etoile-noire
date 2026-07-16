@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 //  1. CONNEXION MQTT (réception des frames)
 // ============================================
 // ===== CONNEXION HIVEMQ =====
-const MQTT_BROKER = 'wss://<TON_URL>.hivemq.cloud:8884/mqtt';
+const MQTT_BROKER = 'wss://8bcc471843bd4948823f4960c3ad45e7.s1.eu.hivemq.cloud:8884/mqtt';
 const MQTT_TOPIC = '#';
 const MQTT_USERNAME = 'Étoile-Noire';           // ← le nom d'utilisateur que tu as créé
 const MQTT_PASSWORD = 'choco@2026'; // ← le mot de passe que tu as défini
