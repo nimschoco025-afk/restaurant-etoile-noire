@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flux vidéo - L'Étoile Noire</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0b0b0b;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #f59e0b;
+            font-family: 'Georgia', serif;
+            font-size: 28px;
+        }
+        .header p {
+            color: #888;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .video-container {
+            background: #000;
+            border: 2px solid #f59e0b40;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+        }
+        .video-container canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            width: 100%;
+            max-width: 900px;
+            padding: 8px 16px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .status-bar .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-bar .status .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-bar .status .dot.on {
+            background: #4ade80;
+            animation: pulse 1.5s infinite;
+        }
+        .status-bar .status .dot.off {
+            background: #ef4444;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        .status-bar .info {
+            color: #666;
+            font-size: 12px;
+        }
+        .back-link {
+            margin-top: 16px;
+            color: #f59e0b;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: #d97706;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 12px;
+        }
+        .stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👨‍🍳 Cuisine en direct</h1>
+        <p>L'Étoile Noire - Flux vidéo en temps réel</p>
+    </div>
+
+    <div class="video-container">
+        <canvas id="videoCanvas"></canvas>
+    </div>
+
+    <div class="status-bar">
+        <div class="status">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">Connexion...</span>
+        </div>
+        <div class="stats">
+            <span id="frameCount">📊 0 FPS</span>
+            <span id="clientCount">👤 0 clients</span>
+        </div>
+    </div>
+
+    <a href="/" class="back-link">← Retourner au site</a>
+
+    <script>
+        const canvas = document.getElementById('videoCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const frameCount = document.getElementById('frameCount');
+        const clientCount = document.getElementById('clientCount');
+        
+        let frameCounter = 0;
+        let fpsTimer = Date.now();
+        let fps = 0;
+
+        function updateFPS() {
+            frameCounter++;
+            const now = Date.now();
+            if (now - fpsTimer >= 1000) {
+                fps = frameCounter;
+                frameCounter = 0;
+                fpsTimer = now;
+                frameCount.textContent = `📊 ${fps} FPS`;
+            }
+        }
+
+        function updateClientCount() {
+            // Le serveur envoie le nombre de clients via WebSocket
+            // On l'affiche quand on le reçoit
+        }
+
+        // Connexion WebSocket
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const ws = new WebSocket(protocol + window.location.host);
+
+        ws.onopen = function() {
+            statusDot.className = 'dot on';
+            statusText.textContent = 'EN DIRECT';
+            statusText.style.color = '#4ade80';
+            console.log('📡 Connecté au flux');
+        };
+
+        ws.onmessage = function(event) {
+            // Les données JPEG arrivent en binaire
+            const blob = new Blob([event.data], {type: 'image/jpeg'});
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(url);
+                updateFPS();
+            };
+            
+            img.onerror = function() {
+                console.error('Erreur de décodage JPEG');
+            };
+            
+            img.src = url;
+        };
+
+        ws.onclose = function() {
+            statusDot.className = 'dot off';
+            statusText.textContent = 'DÉCONNECTÉ';
+            statusText.style.color = '#ef4444';
+            console.log('❌ Déconnecté');
+            
+            // Reconnexion automatique
+            setTimeout(() => {
+                window.location.reload();
+            }, 5000);
+        };
+
+        ws.onerror = function(error) {
+            console.error('Erreur WebSocket:', error);
+            statusDot.className = 'dot off';
+            statusText.textContent = 'ERREUR';
+            statusText.style.color = '#ef4444';
+        };
+    </script>
+</body>
+</html>

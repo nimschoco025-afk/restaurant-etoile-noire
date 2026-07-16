@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Étoile Noire - Restaurant Gastronomique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0b0b0b;
+            color: #f3f4f6;
+        }
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+        .hover-trigger:hover .hover-target {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(245, 158, 11, 0.15);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        /* Styles pour la caméra */
+        .camera-container {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .camera-container img {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: cover;
+        }
+        .camera-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: opacity 0.3s;
+        }
+        .camera-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .camera-overlay i {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .camera-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.8);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #4ade80;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+        }
+        .camera-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Fenêtre d'authentification ADMIN (simplifiée pour redirection) */
+        .auth-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(8px);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .auth-overlay.hidden {
+            display: none;
+        }
+        .auth-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+        }
+        .auth-box h2 {
+            font-family: 'Playfair Display', serif;
+            color: #f59e0b;
+            margin-bottom: 4px;
+            font-size: 22px;
+        }
+        .auth-box p {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .auth-box .admin-badge {
+            display: inline-block;
+            background: #f59e0b20;
+            color: #f59e0b;
+            font-size: 10px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            border: 1px solid #f59e0b40;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .auth-box .btn-amber {
+            background: #f59e0b;
+            color: black;
+            font-weight: 600;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .auth-box .btn-amber:hover {
+            background: #d97706;
+        }
+        .auth-box .hint {
+            font-size: 11px;
+            color: #555;
+            margin-top: 12px;
+        }
+
+        .admin-badge-btn {
+            background: #f59e0b20;
+            color: #f59e0b;
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            border: 1px solid #f59e0b30;
+            margin-left: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-neutral-800 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="#" class="font-serif text-2xl font-bold text-amber-500 tracking-wider">L'ÉTOILE NOIRE</a>
+            
+            <div class="flex items-center gap-6">
+                <!-- Bouton Caméra ADMIN -->
+                <button onclick="toggleCameraView()" class="hidden md:flex items-center gap-2 text-neutral-300 hover:text-amber-500 transition-colors text-sm font-medium">
+                    <i class="fa-solid fa-video"></i> Caméra
+                    <span class="admin-badge-btn">ADMIN</span>
+                </button>
+                <button onclick="openReservationModal()" class="hidden md:block bg-amber-500 hover:bg-amber-600 text-black font-semibold px-5 py-2 rounded-full transition-all duration-300">
+                    Réserver une Table
+                </button>
+                <button onclick="toggleCart()" class="relative p-2 text-neutral-300 hover:text-amber-500 transition-colors">
+                    <i class="fa-solid fa-basket-shopping text-2xl"></i>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-amber-500 text-black text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center scale-0 transition-transform duration-300">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Section Hero -->
+    <section class="min-h-screen flex items-center justify-center relative pt-20 px-6 bg-gradient-to-b from-neutral-950 to-black">
+        <div class="max-w-4xl text-center animate-fade-in">
+            <span class="text-amber-500 tracking-widest uppercase text-sm font-semibold">Une expérience sensorielle unique à Bamako</span>
+            <h1 class="font-serif text-5xl md:text-7xl font-bold mt-4 mb-6 leading-tight">La Haute Cuisine à portée de clic</h1>
+            <p class="text-neutral-400 text-lg md:text-xl max-w-2xl mx-auto mb-8">Découvrez notre menu d'exception, réservez votre table ou faites-vous livrer nos créations directement chez vous.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#menu" class="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-8 py-4 rounded-full transition-all transform hover:scale-105">Voir la Carte</a>
+                <button onclick="openReservationModal()" class="border border-neutral-700 hover:border-amber-500 hover:text-amber-500 px-8 py-4 rounded-full transition-all">Réserver une table</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Caméra (protégée par authentification serveur) -->
+    <section id="camera-section" class="py-12 px-6 max-w-7xl mx-auto hidden scroll-mt-24">
+        <div class="text-center mb-8">
+            <h2 class="font-serif text-3xl font-bold text-amber-500">👨‍🍳 Vue Directe de la Cuisine</h2>
+            <p class="text-neutral-400 mt-2">Accès réservé au personnel autorisé</p>
+        </div>
+
+        <div class="camera-container border border-amber-500/20 shadow-lg shadow-amber-500/5">
+            <div class="camera-status">
+                <span class="dot"></span>
+                <span id="camera-status-text">EN DIRECT</span>
+            </div>
+            
+            <!-- Image du flux vidéo (via WebSocket) -->
+            <img id="camera-feed" 
+                 src="" 
+                 alt="Flux vidéo de la cuisine"
+                 style="display: none;">
+
+            <!-- Overlay de chargement -->
+            <div id="camera-loading" class="camera-overlay">
+                <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i>
+                <p class="text-amber-500/80 font-medium">Connexion au flux distant...</p>
+                <p class="text-neutral-500 text-sm mt-2">
+                    <i class="fa-solid fa-cloud"></i> Serveur en ligne
+                </p>
+            </div>
+
+            <!-- Overlay d'erreur -->
+            <div id="camera-error" class="camera-overlay hidden">
+                <i class="fa-solid fa-video-slash text-red-500"></i>
+                <p class="text-red-400 font-medium">Flux indisponible</p>
+                <p class="text-neutral-500 text-sm mt-2">Vérifiez que la caméra est connectée</p>
+            </div>
+
+            <!-- Overlay d'authentification ADMIN (redirige vers /admin/stream) -->
+            <div id="camera-auth-overlay" class="auth-overlay">
+                <div class="auth-box">
+                    <div class="admin-badge"><i class="fa-solid fa-lock"></i> Accès ADMIN</div>
+                    <h2>🔐 Authentification requise</h2>
+                    <p>Ce flux est réservé au personnel autorisé du restaurant.</p>
+                    <a href="/admin/stream" target="_blank" class="btn-amber">
+                        <i class="fa-solid fa-arrow-right"></i> Accéder au flux protégé
+                    </a>
+                    <div class="hint">
+                        <i class="fa-solid fa-shield-halved"></i> L'authentification est gérée par le serveur
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4 flex justify-center gap-6 text-xs text-neutral-500">
+            <span class="flex items-center gap-2">
+                <i class="fa-solid fa-lock text-amber-500"></i>
+                Accès admin protégé
+            </span>
+            <span class="flex items-center gap-2">
+                <i class="fa-solid fa-cloud text-amber-500"></i>
+                Serveur en ligne
+            </span>
+            <span class="flex items-center gap-2">
+                <i class="fa-solid fa-clock text-amber-500"></i>
+                Temps réel
+            </span>
+        </div>
+    </section>
+
+    <!-- Menu -->
+    <section id="menu" class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="font-serif text-4xl font-bold text-amber-500">Nos Créations</h2>
+            <p class="text-neutral-400 mt-2">Fraîcheur, passion et excellence dans chaque assiette.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Plat 1 -->
+            <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                <div class="relative h-64 bg-neutral-800 flex items-center justify-center group overflow-hidden">
+                    <div class="text-center p-6 text-neutral-500 group-hover:text-amber-500 transition-colors">
+                        <i class="fa-solid fa-utensils text-4xl mb-3"></i>
+                        <p class="text-xs uppercase tracking-wider">Filet Mignon</p>
+                    </div>
+                </div>
+                <div class="p-6 flex flex-col flex-grow justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-serif text-xl font-bold">Filet Mignon d'Exception</h3>
+                            <span class="text-amber-500 font-bold">15 000 F</span>
+                        </div>
+                        <p class="text-neutral-400 text-sm mb-6">Accompagné de son écrasé de pommes de terre truffé et d'un jus corsé au romarin.</p>
+                    </div>
+                    <button onclick="addToCart('Filet Mignon d\'Exception', 15000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                    </button>
+                </div>
+            </div>
+
+            <!-- Plat 2 -->
+            <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                <div class="relative h-64 bg-neutral-800 flex items-center justify-center group overflow-hidden">
+                    <div class="text-center p-6 text-neutral-500 group-hover:text-amber-500 transition-colors">
+                        <i class="fa-solid fa-shrimp text-4xl mb-3"></i>
+                        <p class="text-xs uppercase tracking-wider">Gambas Royales</p>
+                    </div>
+                </div>
+                <div class="p-6 flex flex-col flex-grow justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-serif text-xl font-bold">Risotto de Gambas Royales</h3>
+                            <span class="text-amber-500 font-bold">12 000 F</span>
+                        </div>
+                        <p class="text-neutral-400 text-sm mb-6">Risotto crémeux lié au parmesan de 24 mois, flambé au Cognac.</p>
+                    </div>
+                    <button onclick="addToCart('Risotto de Gambas Royales', 12000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                    </button>
+                </div>
+            </div>
+
+            <!-- Plat 3 -->
+            <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                <div class="relative h-64 bg-neutral-800 flex items-center justify-center group overflow-hidden">
+                    <div class="text-center p-6 text-neutral-500 group-hover:text-amber-500 transition-colors">
+                        <i class="fa-solid fa-ice-cream text-4xl mb-3"></i>
+                        <p class="text-xs uppercase tracking-wider">Dessert Signature</p>
+                    </div>
+                </div>
+                <div class="p-6 flex flex-col flex-grow justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-serif text-xl font-bold">Sphère Chocolat & Or</h3>
+                            <span class="text-amber-500 font-bold">5 000 F</span>
+                        </div>
+                        <p class="text-neutral-400 text-sm mb-6">Chocolat noir intense, cœur coulant caramel beurre salé et feuilles d'or.</p>
+                    </div>
+                    <button onclick="addToCart('Sphère Chocolat & Or', 5000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== PANIER ====== -->
+    <div id="cart-drawer" class="fixed top-0 right-0 bottom-0 w-full max-w-md bg-neutral-950 border-l border-neutral-800 z-50 transform translate-x-full transition-transform duration-500 flex flex-col shadow-2xl">
+        <div class="p-6 border-b border-neutral-800 flex justify-between items-center">
+            <h3 class="text-xl font-bold font-serif text-amber-500">Votre Sélection</h3>
+            <button onclick="toggleCart()" class="text-neutral-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+            <div class="text-center text-neutral-500 py-12">Votre panier est vide.</div>
+        </div>
+        <div class="p-6 border-t border-neutral-800 space-y-4 bg-black overflow-y-auto max-h-[65vh]">
+            <div>
+                <label class="block text-sm font-semibold text-neutral-300 mb-2">Comment souhaitez-vous recevoir votre commande ? *</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setDeliveryMode('emporter')" id="btn-emporter" class="py-2.5 rounded-xl border border-amber-500 text-amber-500 bg-amber-500/10 font-medium text-xs transition-all flex flex-col items-center justify-center gap-1">
+                        <i class="fa-solid fa-bag-shopping"></i> <span>À emporter</span>
+                    </button>
+                    <button onclick="setDeliveryMode('livrer')" id="btn-livrer" class="py-2.5 rounded-xl border border-neutral-700 text-neutral-400 font-medium text-xs transition-all flex flex-col items-center justify-center gap-1">
+                        <i class="fa-solid fa-truck"></i> <span>À livrer (1000F)</span>
+                    </button>
+                    <button onclick="setDeliveryMode('sur-table')" id="btn-sur-table" class="py-2.5 rounded-xl border border-neutral-700 text-neutral-400 font-medium text-xs transition-all flex flex-col items-center justify-center gap-1">
+                        <i class="fa-solid fa-chair"></i> <span>Sur Table (Gratuit)</span>
+                    </button>
+                </div>
+            </div>
+            <div id="dynamic-form-container" class="space-y-3 bg-neutral-900/50 p-4 rounded-xl border border-neutral-800"></div>
+            <div class="bg-neutral-900/50 p-4 rounded-xl border border-neutral-800 space-y-2">
+                <label class="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Moyen de paiement *</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" onclick="selectPaymentMethod('Orange Money', 'cart')" id="pay-om-cart" class="py-2 rounded-lg border border-neutral-800 text-xs font-semibold hover:border-amber-500 transition-all text-neutral-400 bg-neutral-950 flex flex-col items-center gap-1">
+                        <span>Orange Money</span>
+                    </button>
+                    <button type="button" onclick="selectPaymentMethod('Wave', 'cart')" id="pay-wave-cart" class="py-2 rounded-lg border border-neutral-800 text-xs font-semibold hover:border-amber-500 transition-all text-neutral-400 bg-neutral-950 flex flex-col items-center gap-1">
+                        <span>Wave</span>
+                    </button>
+                    <button type="button" onclick="selectPaymentMethod('Moov Money', 'cart')" id="pay-moov-cart" class="py-2 rounded-lg border border-neutral-800 text-xs font-semibold hover:border-amber-500 transition-all text-neutral-400 bg-neutral-950 flex flex-col items-center gap-1">
+                        <span>Moov Money</span>
+                    </button>
+                </div>
+                <input type="hidden" id="selected-payment-cart" required>
+            </div>
+            <div id="extra-fees-container" class="text-xs text-neutral-400 space-y-1 border-t border-neutral-800 pt-3 hidden">
+                <div class="flex justify-between">
+                    <span>Sous-total plats :</span>
+                    <span id="subtotal-display">0 F</span>
+                </div>
+                <div class="flex justify-between text-amber-500 font-semibold">
+                    <span id="fee-label">Frais :</span>
+                    <span id="fee-display">0 F</span>
+                </div>
+            </div>
+            <div class="flex justify-between items-center text-lg font-bold border-t border-neutral-800 pt-3">
+                <span>Total :</span>
+                <span id="cart-total" class="text-amber-500">0 F</span>
+            </div>
+            <button onclick="checkoutOrder()" class="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2">
+                Confirmer ma Commande <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ====== MODAL RÉSERVATION ====== -->
+    <div id="reservation-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-900 border border-neutral-800 w-full max-w-lg rounded-2xl p-6 md:p-8 animate-fade-in relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeReservationModal()" class="absolute top-4 right-4 text-neutral-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="font-serif text-3xl font-bold text-amber-500 mb-2">Réserver une Table</h3>
+            <p class="text-neutral-400 text-sm mb-6">Chaque table réservée coûte <span class="text-amber-500 font-bold">500 F</span> et peut accueillir jusqu'à <span class="text-amber-500 font-bold">4 personnes</span> maximum.</p>
+            
+            <form id="reservation-form" onsubmit="submitReservation(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Nom Complet *</label>
+                    <input type="text" id="res-name" required class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-all text-white text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Numéro de téléphone *</label>
+                    <div class="flex rounded-xl overflow-hidden border border-neutral-800 bg-neutral-950 focus-within:border-amber-500 transition-all">
+                        <span class="bg-neutral-800 text-neutral-400 px-3.5 flex items-center text-sm font-semibold select-none border-r border-neutral-800">+223</span>
+                        <input type="tel" id="res-phone" required class="w-full bg-transparent px-4 py-3 focus:outline-none text-white text-sm" placeholder="XXXXXXXX" maxlength="8">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Date *</label>
+                        <input type="date" id="res-date" required class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-all text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Heure *</label>
+                        <input type="time" id="res-time" required class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-all text-white text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Nombre de Tables *</label>
+                        <select id="res-tables" onchange="updateReservationCapacity()" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-all text-white text-sm">
+                            <option value="1" selected>1 table (500 F)</option>
+                            <option value="2">2 tables (1 000 F)</option>
+                            <option value="3">3 tables (1 500 F)</option>
+                            <option value="4">4 tables (2 000 F)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Nombre d'invités *</label>
+                        <select id="res-guests" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-all text-white text-sm">
+                        </select>
+                    </div>
+                </div>
+                <div class="bg-neutral-950/80 p-4 rounded-xl border border-neutral-800 space-y-2">
+                    <label class="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Moyen de paiement *</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="selectPaymentMethod('Orange Money', 'res')" id="pay-om-res" class="py-2.5 rounded-lg border border-neutral-800 text-xs font-semibold hover:border-amber-500 transition-all text-neutral-400 bg-neutral-900 flex flex-col items-center gap-1">
+                            <span>Orange Money</span>
+                        </button>
+                        <button type="button" onclick="selectPaymentMethod('Wave', 'res')" id="pay-wave-res" class="py-2.5 rounded-lg border border-neutral-800 text-xs font-semibold hover:border-amber-500 transition-all text-neutral-400 bg-neutral-900 flex flex-col items-center gap-1">
+                            <span>Wave</span>
+                        </button>
+                        <button type="button" onclick="selectPaymentMethod('Moov Money', 'res')" id="pay-moov-res" class="py-2.5 rounded-lg border border-neutral-800 text-xs font-semibold hover:border-amber-500 transition-all text-neutral-400 bg-neutral-900 flex flex-col items-center gap-1">
+                            <span>Moov Money</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="selected-payment-res" required>
+                </div>
+                <div class="pt-2 text-center text-sm font-semibold text-neutral-300">
+                    Montant de réservation : <span id="res-total-price" class="text-amber-500 text-lg font-bold">500 F</span>
+                </div>
+                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold py-4 rounded-xl transition-all mt-2">
+                    Confirmer la Réservation et Payer
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== MODAL REÇU ====== -->
+    <div id="receipt-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-neutral-900 border-2 border-amber-500/50 w-full max-w-md rounded-2xl p-6 animate-fade-in relative shadow-2xl">
+            <h3 class="font-serif text-2xl font-bold text-amber-500 text-center mb-4"><i class="fa-solid fa-receipt"></i> Reçu de Paiement</h3>
+            <div id="receipt-content" class="bg-black/40 border border-neutral-800 p-4 rounded-xl text-sm font-mono space-y-2 whitespace-pre-wrap text-neutral-300 max-h-[50vh] overflow-y-auto">
+            </div>
+            <p class="text-xs text-neutral-400 text-center mt-4 mb-5">Choisissez le canal pour envoyer ce reçu de paiement au client :</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="sendReceipt('whatsapp')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Via WhatsApp
+                </button>
+                <button onclick="sendReceipt('sms')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-comment-sms text-lg"></i> Via SMS
+                </button>
+            </div>
+            <button onclick="closeReceiptModal()" class="w-full mt-4 bg-neutral-800 hover:bg-neutral-700 text-white py-2 rounded-lg text-sm transition-all">
+                Fermer
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        //  CONFIGURATION (plus d'IP locale, tout est distant)
+        // ============================================
+        // Pas besoin de CAMERA_CONFIG, le WebSocket se connecte au serveur
+
+        // ============================================
+        //  GESTION DU FLUX VIDÉO (WEBSOCKET)
+        // ============================================
+        let ws = null;
+        let wsConnected = false;
+
+        function connectToCameraStream() {
+            const img = document.getElementById('camera-feed');
+            const loading = document.getElementById('camera-loading');
+            const error = document.getElementById('camera-error');
+            const statusText = document.getElementById('camera-status-text');
+            
+            // Afficher le chargement
+            loading.classList.remove('hidden');
+            error.classList.add('hidden');
+            img.style.display = 'none';
+            statusText.textContent = 'CONNEXION...';
+            
+            // Connexion WebSocket
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            ws = new WebSocket(protocol + window.location.host);
+            
+            ws.onopen = function() {
+                console.log('📡 Connecté au flux vidéo');
+                wsConnected = true;
+                loading.classList.add('hidden');
+                statusText.textContent = 'EN DIRECT';
+                document.querySelector('.camera-status .dot').style.animation = 'pulse 2s infinite';
+            };
+            
+            ws.onmessage = function(event) {
+                // Les données JPEG arrivent en binaire
+                const blob = new Blob([event.data], {type: 'image/jpeg'});
+                const url = URL.createObjectURL(blob);
+                img.src = url;
+                img.style.display = 'block';
+                loading.classList.add('hidden');
+                error.classList.add('hidden');
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('Erreur WebSocket:', error);
+                wsConnected = false;
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                statusText.textContent = 'ERREUR';
+            };
+            
+            ws.onclose = function() {
+                console.log('❌ Déconnecté, reconnexion dans 3s...');
+                wsConnected = false;
+                loading.classList.add('hidden');
+                error.classList.remove('hidden');
+                statusText.textContent = 'RECONNEXION...';
+                document.querySelector('.camera-status .dot').style.animation = 'none';
+                
+                // Reconnexion automatique
+                setTimeout(() => {
+                    if (!document.getElementById('camera-section').classList.contains('hidden')) {
+                        connectToCameraStream();
+                    }
+                }, 3000);
+            };
+        }
+
+        function toggleCameraView() {
+            const section = document.getElementById('camera-section');
+            section.classList.toggle('hidden');
+            
+            if (!section.classList.contains('hidden')) {
+                // Afficher l'overlay d'authentification
+                document.getElementById('camera-auth-overlay').classList.remove('hidden');
+                document.getElementById('camera-loading').classList.add('hidden');
+                document.getElementById('camera-error').classList.add('hidden');
+            } else {
+                // Fermer la connexion WebSocket
+                if (ws) {
+                    ws.close();
+                    ws = null;
+                }
+                wsConnected = false;
+            }
+        }
+
+        // ============================================
+        //  TOAST NOTIFICATIONS
+        // ============================================
+        function showToast(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                info: 'bg-blue-600',
+                warning: 'bg-amber-500'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] ${colors[type] || colors.info} text-white px-6 py-3 rounded-xl shadow-xl text-sm font-medium animate-fade-in transition-all duration-300`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ============================================
+        //  VOTRE CODE EXISTANT (PANIER, RÉSERVATIONS, ETC.)
+        // ============================================
+        let cart = [];
+        let deliveryMode = 'emporter';
+        let currentReceiptText = "";
+        let currentClientPhone = "";
+        const merchantPhone = "+22390189334";
+        const bamakoQuartiers = [
+            "ACI 2000", "Badalabougou", "Baco-Djicoroni", "Faladié", "Hamdallaye", 
+            "Hippodrome", "Korofina", "Niaréla", "Sotuba", "Kalaban Coura", 
+            "Sébénikoro", "Magnambougou", "Djicoroni Para", "Zone Industrielle"
+        ];
+
+        function isValidMaliNumber(num) {
+            const malianPhoneRegex = /^[5-9]\d{7}$/;
+            return malianPhoneRegex.test(num);
+        }
+
+        function toggleCart() {
+            const drawer = document.getElementById('cart-drawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        function addToCart(name, price) {
+            const existingItem = cart.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ name, price, quantity: 1 });
+            }
+            updateCartUI();
+            showToast(`✅ ${name} ajouté au panier`, 'success');
+            
+            const badge = document.getElementById('cart-count');
+            badge.classList.remove('scale-0');
+            badge.classList.add('scale-110');
+            setTimeout(() => badge.classList.remove('scale-110'), 200);
+        }
+
+        function removeFromCart(index) {
+            const removed = cart[index].name;
+            cart.splice(index, 1);
+            updateCartUI();
+            showToast(`🗑️ ${removed} retiré du panier`, 'warning');
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            const totalElement = document.getElementById('cart-total');
+            const badge = document.getElementById('cart-count');
+            const subtotalDisplay = document.getElementById('subtotal-display');
+            const feeDisplay = document.getElementById('fee-display');
+            const feeLabel = document.getElementById('fee-label');
+            const extraFeesContainer = document.getElementById('extra-fees-container');
+
+            const totalCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+            badge.innerText = totalCount;
+            if (totalCount === 0) badge.classList.add('scale-0');
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center text-neutral-500 py-12">Votre panier est vide.</div>`;
+                totalElement.innerText = "0 F";
+                extraFeesContainer.classList.add('hidden');
+                return;
+            }
+
+            container.innerHTML = cart.map((item, idx) => `
+                <div class="flex justify-between items-center bg-neutral-900 p-4 rounded-xl border border-neutral-800/60 animate-fade-in">
+                    <div>
+                        <h4 class="font-medium text-white text-sm">${item.name}</h4>
+                        <p class="text-xs text-amber-500 mt-1">${formatPrice(item.price)} F x ${item.quantity}</p>
+                    </div>
+                    <button onclick="removeFromCart(${idx})" class="text-neutral-500 hover:text-red-500 transition-colors p-2">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            const subTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            let extraFee = 0;
+
+            if (deliveryMode === 'livrer') {
+                extraFee = 1000;
+                feeLabel.innerText = "Frais de livraison :";
+                extraFeesContainer.classList.remove('hidden');
+            } else if (deliveryMode === 'sur-table') {
+                extraFee = 0;
+                feeLabel.innerText = "Service Table :";
+                extraFeesContainer.classList.remove('hidden');
+            } else {
+                extraFee = 0;
+                extraFeesContainer.classList.add('hidden');
+            }
+
+            const grandTotal = subTotal + extraFee;
+            subtotalDisplay.innerText = `${formatPrice(subTotal)} F`;
+            feeDisplay.innerText = `${formatPrice(extraFee)} F`;
+            totalElement.innerText = `${formatPrice(grandTotal)} F`;
+        }
+
+        function formatPrice(amount) {
+            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        function setDeliveryMode(mode) {
+            deliveryMode = mode;
+            const btnEmporter = document.getElementById('btn-emporter');
+            const btnLivrer = document.getElementById('btn-livrer');
+            const btnSurTable = document.getElementById('btn-sur-table');
+
+            const defaultClass = "py-2.5 rounded-xl border border-neutral-700 text-neutral-400 font-medium text-xs transition-all flex flex-col items-center justify-center gap-1";
+            const activeClass = "py-2.5 rounded-xl border border-amber-500 text-amber-500 bg-amber-500/10 font-bold text-xs transition-all flex flex-col items-center justify-center gap-1";
+
+            btnEmporter.className = defaultClass;
+            btnLivrer.className = defaultClass;
+            btnSurTable.className = defaultClass;
+
+            if (mode === 'emporter') btnEmporter.className = activeClass;
+            else if (mode === 'livrer') btnLivrer.className = activeClass;
+            else if (mode === 'sur-table') btnSurTable.className = activeClass;
+
+            updateFormUI();
+            updateCartUI();
+        }
+
+        function selectPaymentMethod(method, context) {
+            const inputField = document.getElementById(`selected-payment-${context}`);
+            inputField.value = method;
+
+            const omBtn = document.getElementById(`pay-om-${context}`);
+            const waveBtn = document.getElementById(`pay-wave-${context}`);
+            const moovBtn = document.getElementById(`pay-moov-${context}`);
+
+            [omBtn, waveBtn, moovBtn].forEach(btn => {
+                btn.className = btn.className.replace("border-amber-500 text-amber-500 bg-amber-500/10 font-bold", "border-neutral-800 text-neutral-400 bg-neutral-950");
+            });
+
+            let targetBtn;
+            if (method === 'Orange Money') targetBtn = omBtn;
+            if (method === 'Wave') targetBtn = waveBtn;
+            if (method === 'Moov Money') targetBtn = moovBtn;
+
+            targetBtn.className = targetBtn.className.replace("border-neutral-800 text-neutral-400 bg-neutral-950", "border-amber-500 text-amber-500 bg-amber-500/10 font-bold");
+        }
+
+        function updateFormUI() {
+            const formContainer = document.getElementById('dynamic-form-container');
+            const phoneInputHTML = `
+                <div>
+                    <label class="block text-[10px] text-neutral-400 mb-1 uppercase font-semibold">Numéro de téléphone client *</label>
+                    <div class="flex rounded-lg overflow-hidden border border-neutral-800 bg-neutral-950 focus-within:border-amber-500 transition-all">
+                        <span class="bg-neutral-800 text-neutral-400 px-3 flex items-center text-xs font-semibold select-none border-r border-neutral-800">+223</span>
+                        <input type="tel" id="order-phone" required class="w-full bg-transparent px-3 py-2 focus:outline-none text-white text-xs" placeholder="XXXXXXXX" maxlength="8">
+                    </div>
+                </div>
+            `;
+
+            if (deliveryMode === 'emporter') {
+                formContainer.innerHTML = `
+                    <p class="text-xs text-amber-500 mb-3 font-semibold uppercase tracking-wider"><i class="fa-solid fa-circle-info"></i> Informations d'emporté</p>
+                    <div class="space-y-2.5">
+                        <input type="text" id="order-name" placeholder="Votre nom complet *" class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-white" required>
+                        ${phoneInputHTML}
+                    </div>
+                `;
+            } else if (deliveryMode === 'livrer') {
+                const optionsQuartiers = bamakoQuartiers.map(q => `<option value="${q}">${q}</option>`).join('');
+                formContainer.innerHTML = `
+                    <p class="text-xs text-amber-500 mb-3 font-semibold uppercase tracking-wider"><i class="fa-solid fa-truck-ramp-box"></i> Coordonnées de livraison (+1000F)</p>
+                    <div class="space-y-2.5">
+                        <input type="text" id="order-name" placeholder="Votre nom complet *" class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-white" required>
+                        ${phoneInputHTML}
+                        <div>
+                            <label class="block text-[10px] text-neutral-400 mb-1 uppercase font-semibold">Quartier de Bamako *</label>
+                            <select id="order-quartier" class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-white">
+                                ${optionsQuartiers}
+                            </select>
+                        </div>
+                        <input type="text" id="order-address-details" placeholder="Précisions adresse / Rue, Porte, Repères... *" class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-white" required>
+                    </div>
+                `;
+            } else if (deliveryMode === 'sur-table') {
+                formContainer.innerHTML = `
+                    <p class="text-xs text-amber-500 mb-3 font-semibold uppercase tracking-wider"><i class="fa-solid fa-chair"></i> Commande Directe sur Table (Aucun frais)</p>
+                    <div class="space-y-2.5">
+                        <input type="text" id="order-name" placeholder="Votre nom complet *" class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-white" required>
+                        ${phoneInputHTML}
+                        <div>
+                            <label class="block text-[10px] text-neutral-400 mb-1 uppercase font-semibold">Nombre de personnes (Max 4) *</label>
+                            <select id="order-guests-count" class="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-white">
+                                <option value="1">1 Personne</option>
+                                <option value="2" selected>2 Personnes</option>
+                                <option value="3">3 Personnes</option>
+                                <option value="4">4 Personnes (Max)</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function checkoutOrder() {
+            if (cart.length === 0) {
+                showToast('❌ Votre panier est vide !', 'error');
+                return;
+            }
+
+            const nameInput = document.getElementById('order-name');
+            const phoneInput = document.getElementById('order-phone');
+            const paymentInput = document.getElementById('selected-payment-cart');
+
+            if (!nameInput || !nameInput.value.trim()) {
+                showToast('❌ Le nom complet est obligatoire !', 'error');
+                return;
+            }
+            if (!phoneInput || !phoneInput.value.trim()) {
+                showToast('❌ Le numéro de téléphone est obligatoire !', 'error');
+                return;
+            }
+
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
+            const paymentMethod = paymentInput.value;
+
+            if (!isValidMaliNumber(phone)) {
+                showToast('❌ Numéro invalide (8 chiffres, commence par 5-9)', 'error');
+                return;
+            }
+
+            if (!paymentMethod) {
+                showToast('❌ Veuillez choisir un moyen de paiement', 'error');
+                return;
+            }
+
+            let deliveryDetails = "";
+            let extraFee = 0;
+
+            if (deliveryMode === 'livrer') {
+                const quartier = document.getElementById('order-quartier').value;
+                const details = document.getElementById('order-address-details').value.trim();
+                if (!details) {
+                    showToast('❌ L\'adresse de livraison est obligatoire !', 'error');
+                    return;
+                }
+                extraFee = 1000;
+                deliveryDetails = `Mode : Livraison à domicile (+1000F)\nQuartier : ${quartier}\nAdresse : ${details}`;
+            } else if (deliveryMode === 'sur-table') {
+                const guests = document.getElementById('order-guests-count').value;
+                extraFee = 0;
+                deliveryDetails = `Mode : Service Direct Sur Table (Gratuit)\nConvives : ${guests} pers.`;
+            } else {
+                deliveryDetails = `Mode : À emporter`;
+            }
+
+            const subTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            const totalFinal = subTotal + extraFee;
+
+            let receipt = `🧾 L'ÉTOILE NOIRE BAMAKO\n`;
+            receipt += `-----------------------------\n`;
+            receipt += `REÇU DE COMMANDE\n`;
+            receipt += `Client : ${name}\n`;
+            receipt += `Tél Client : +223 ${phone}\n`;
+            receipt += `-----------------------------\n`;
+            receipt += `Plats commandés :\n`;
+            cart.forEach(item => {
+                receipt += `- ${item.name} x${item.quantity} : ${formatPrice(item.price * item.quantity)} F\n`;
+            });
+            receipt += `-----------------------------\n`;
+            receipt += `${deliveryDetails}\n`;
+            receipt += `Paiement : ${paymentMethod} (Validé)\n`;
+            receipt += `-----------------------------\n`;
+            receipt += `TOTAL FINAL : ${formatPrice(totalFinal)} F\n`;
+            receipt += `-----------------------------\n`;
+            receipt += `Merci de votre commande !`;
+
+            currentReceiptText = receipt;
+            currentClientPhone = "+223" + phone;
+
+            openReceiptModal(receipt);
+            cart = [];
+            updateCartUI();
+            toggleCart();
+            showToast('✅ Commande confirmée !', 'success');
+        }
+
+        function submitReservation(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('res-name').value.trim();
+            const phone = document.getElementById('res-phone').value.trim();
+            const date = document.getElementById('res-date').value;
+            const time = document.getElementById('res-time').value;
+            const tables = document.getElementById('res-tables').value;
+            const guests = document.getElementById('res-guests').value;
+            const paymentMethod = document.getElementById('selected-payment-res').value;
+
+            if (!isValidMaliNumber(phone)) {
+                showToast('❌ Numéro de téléphone invalide !', 'error');
+                return;
+            }
+
+            if (!paymentMethod) {
+                showToast('❌ Veuillez choisir un moyen de paiement', 'error');
+                return;
+            }
+
+            const totalPrice = parseInt(tables) * 500;
+
+            let receipt = `🧾 L'ÉTOILE NOIRE BAMAKO\n`;
+            receipt += `-----------------------------\n`;
+            receipt += `REÇU DE RÉSERVATION DE TABLE\n`;
+            receipt += `Client : ${name}\n`;
+            receipt += `Tél Client : +223 ${phone}\n`;
+            receipt += `-----------------------------\n`;
+            receipt += `Détails réservation :\n`;
+            receipt += `Date : ${date} à ${time}\n`;
+            receipt += `Table(s) : ${tables} (Max ${tables * 4} personnes)\n`;
+            receipt += `Invité(s) attendu(s) : ${guests}\n`;
+            receipt += `-----------------------------\n`;
+            receipt += `Moyen de Payement : ${paymentMethod}\n`;
+            receipt += `Frais réservation : ${formatPrice(totalPrice)} F (Payé)\n`;
+            receipt += `-----------------------------\n`;
+            receipt += `Votre table vous attendra !`;
+
+            currentReceiptText = receipt;
+            currentClientPhone = "+223" + phone;
+
+            closeReservationModal();
+            openReceiptModal(receipt);
+            document.getElementById('reservation-form').reset();
+            document.getElementById('selected-payment-res').value = "";
+            showToast('✅ Réservation confirmée !', 'success');
+        }
+
+        function openReservationModal() {
+            document.getElementById('reservation-modal').classList.remove('hidden');
+        }
+
+        function closeReservationModal() {
+            document.getElementById('reservation-modal').classList.add('hidden');
+        }
+
+        function openReceiptModal(text) {
+            document.getElementById('receipt-content').innerText = text;
+            document.getElementById('receipt-modal').classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
+
+        function sendReceipt(channel) {
+            const encodedMessage = encodeURIComponent(currentReceiptText);
+            if (channel === 'whatsapp') {
+                window.open(`https://api.whatsapp.com/send?phone=${currentClientPhone}&text=${encodedMessage}`, '_blank');
+            } else if (channel === 'sms') {
+                window.open(`sms:${currentClientPhone}?body=${encodedMessage}`, '_blank');
+            }
+        }
+
+        function updateReservationCapacity() {
+            const tablesSelect = document.getElementById('res-tables');
+            const guestsSelect = document.getElementById('res-guests');
+            const priceLabel = document.getElementById('res-total-price');
+
+            const numTables = parseInt(tablesSelect.value);
+            const maxGuests = numTables * 4;
+            const totalPrice = numTables * 500;
+
+            priceLabel.innerText = `${formatPrice(totalPrice)} F`;
+
+            guestsSelect.innerHTML = "";
+            for (let i = 1; i <= maxGuests; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.innerText = `${i} personnes`;
+                if(i === maxGuests) opt.selected = true;
+                guestsSelect.appendChild(opt);
+            }
+        }
+
+        // ============================================
+        //  INITIALISATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFormUI();
+            updateReservationCapacity();
+        });
+    </script>
+</body>
+</html>
