@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>L'Étoile Noire - Restaurant Gastronomique</title>
+    <title>Smart Resto - Restaurant Gastronomique</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -29,7 +29,6 @@
             animation: fadeInUp 0.8s ease forwards;
         }
 
-        /* Styles pour la caméra */
         .camera-container {
             position: relative;
             background: #000;
@@ -91,7 +90,6 @@
             50% { opacity: 0.3; }
         }
 
-        /* Fenêtre d'authentification ADMIN (simplifiée pour redirection) */
         .auth-overlay {
             position: absolute;
             inset: 0;
@@ -174,6 +172,66 @@
             font-weight: 700;
             letter-spacing: 0.5px;
         }
+
+        .menu-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .group:hover .menu-image {
+            transform: scale(1.05);
+        }
+        .image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+        }
+        .image-placeholder i {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .menu-img-container {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            background: #1a1a1a;
+        }
+        .menu-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .menu-img-container .food-icon {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-size: 48px;
+        }
+
+        .category-title {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+        .category-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: #f59e0b;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class="overflow-x-hidden">
@@ -181,10 +239,9 @@
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-neutral-800 px-6 py-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="#" class="font-serif text-2xl font-bold text-amber-500 tracking-wider">L'ÉTOILE NOIRE</a>
+            <a href="#" class="font-serif text-2xl font-bold text-amber-500 tracking-wider">SMART RESTO</a>
             
             <div class="flex items-center gap-6">
-                <!-- Bouton Caméra ADMIN -->
                 <button onclick="toggleCameraView()" class="hidden md:flex items-center gap-2 text-neutral-300 hover:text-amber-500 transition-colors text-sm font-medium">
                     <i class="fa-solid fa-video"></i> Caméra
                     <span class="admin-badge-btn">ADMIN</span>
@@ -213,7 +270,7 @@
         </div>
     </section>
 
-    <!-- Section Caméra (protégée par authentification serveur) -->
+    <!-- Section Caméra -->
     <section id="camera-section" class="py-12 px-6 max-w-7xl mx-auto hidden scroll-mt-24">
         <div class="text-center mb-8">
             <h2 class="font-serif text-3xl font-bold text-amber-500">👨‍🍳 Vue Directe de la Cuisine</h2>
@@ -226,13 +283,8 @@
                 <span id="camera-status-text">EN DIRECT</span>
             </div>
             
-            <!-- Image du flux vidéo (via WebSocket) -->
-            <img id="camera-feed" 
-                 src="" 
-                 alt="Flux vidéo de la cuisine"
-                 style="display: none;">
+            <img id="camera-feed" src="" alt="Flux vidéo de la cuisine" style="display: none;">
 
-            <!-- Overlay de chargement -->
             <div id="camera-loading" class="camera-overlay">
                 <i class="fa-solid fa-circle-notch fa-spin text-amber-500"></i>
                 <p class="text-amber-500/80 font-medium">Connexion au flux distant...</p>
@@ -241,14 +293,12 @@
                 </p>
             </div>
 
-            <!-- Overlay d'erreur -->
             <div id="camera-error" class="camera-overlay hidden">
                 <i class="fa-solid fa-video-slash text-red-500"></i>
                 <p class="text-red-400 font-medium">Flux indisponible</p>
                 <p class="text-neutral-500 text-sm mt-2">Vérifiez que la caméra est connectée</p>
             </div>
 
-            <!-- Overlay d'authentification ADMIN (redirige vers /admin/stream) -->
             <div id="camera-auth-overlay" class="auth-overlay">
                 <div class="auth-box">
                     <div class="admin-badge"><i class="fa-solid fa-lock"></i> Accès ADMIN</div>
@@ -265,98 +315,273 @@
         </div>
 
         <div class="text-center mt-4 flex justify-center gap-6 text-xs text-neutral-500">
-            <span class="flex items-center gap-2">
-                <i class="fa-solid fa-lock text-amber-500"></i>
-                Accès admin protégé
-            </span>
-            <span class="flex items-center gap-2">
-                <i class="fa-solid fa-cloud text-amber-500"></i>
-                Serveur en ligne
-            </span>
-            <span class="flex items-center gap-2">
-                <i class="fa-solid fa-clock text-amber-500"></i>
-                Temps réel
-            </span>
+            <span class="flex items-center gap-2"><i class="fa-solid fa-lock text-amber-500"></i> Accès admin protégé</span>
+            <span class="flex items-center gap-2"><i class="fa-solid fa-cloud text-amber-500"></i> Serveur en ligne</span>
+            <span class="flex items-center gap-2"><i class="fa-solid fa-clock text-amber-500"></i> Temps réel</span>
         </div>
     </section>
 
-    <!-- Menu -->
+    <!-- ============================================ -->
+    <!-- MENU COMPLET AVEC IMAGES                      -->
+    <!-- ============================================ -->
     <section id="menu" class="py-24 px-6 max-w-7xl mx-auto">
         <div class="text-center mb-16">
-            <h2 class="font-serif text-4xl font-bold text-amber-500">Nos Créations</h2>
+            <h2 class="font-serif text-4xl font-bold text-amber-500">Notre Carte</h2>
             <p class="text-neutral-400 mt-2">Fraîcheur, passion et excellence dans chaque assiette.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Plat 1 -->
-            <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
-                <div class="relative h-64 bg-neutral-800 flex items-center justify-center group overflow-hidden">
-                    <div class="text-center p-6 text-neutral-500 group-hover:text-amber-500 transition-colors">
-                        <i class="fa-solid fa-utensils text-4xl mb-3"></i>
-                        <p class="text-xs uppercase tracking-wider">Filet Mignon</p>
+        <!-- ====== CATÉGORIE : PLATS PRINCIPAUX ====== -->
+        <div class="mb-16">
+            <h3 class="category-title font-serif text-3xl font-bold text-white text-center">🍽️ Plats Principaux</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+                
+                <!-- Garba Ivoirienne -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container">
+                        <img src="src/garba_ivoirien.jpg" alt="Garba Ivoirienne" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-fish"></i><span style="font-size:12px;margin-top:4px;">Garba</span></div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-serif text-xl font-bold">Garba Ivoirienne</h3>
+                                <span class="text-amber-500 font-bold">3 500 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-sm mb-6">Attiéké frais accompagné de thon grillé, oignons et piment, servi avec sa sauce tomate épicée.</p>
+                        </div>
+                        <button onclick="addToCart('Garba Ivoirienne', 3500)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                        </button>
                     </div>
                 </div>
-                <div class="p-6 flex flex-col flex-grow justify-between">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-serif text-xl font-bold">Filet Mignon d'Exception</h3>
-                            <span class="text-amber-500 font-bold">15 000 F</span>
-                        </div>
-                        <p class="text-neutral-400 text-sm mb-6">Accompagné de son écrasé de pommes de terre truffé et d'un jus corsé au romarin.</p>
+
+                <!-- Poisson Braisé -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container">
+                        <img src="src/poisson_braisé.jpg" alt="Poisson Braisé" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-fish"></i><span style="font-size:12px;margin-top:4px;">Poisson</span></div>
                     </div>
-                    <button onclick="addToCart('Filet Mignon d\'Exception', 15000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
-                    </button>
+                    <div class="p-6 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-serif text-xl font-bold">Poisson Braisé</h3>
+                                <span class="text-amber-500 font-bold">5 000 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-sm mb-6">Poisson frais braisé au feu de bois, servi avec sauce piquante, plantains et accompagnements.</p>
+                        </div>
+                        <button onclick="addToCart('Poisson Braisé', 5000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Poulet Ticken -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1562967914-608f82629710?w=400&h=300&fit=crop" alt="Poulet Ticken" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-drumstick-bite"></i><span style="font-size:12px;margin-top:4px;">Ticken</span></div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-serif text-xl font-bold">Poulet Ticken</h3>
+                                <span class="text-amber-500 font-bold">4 500 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-sm mb-6">Poulet mariné aux épices, grillé à la perfection, servi avec frites et sauce piquante.</p>
+                        </div>
+                        <button onclick="addToCart('Poulet Ticken', 4500)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Plat 2 -->
-            <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
-                <div class="relative h-64 bg-neutral-800 flex items-center justify-center group overflow-hidden">
-                    <div class="text-center p-6 text-neutral-500 group-hover:text-amber-500 transition-colors">
-                        <i class="fa-solid fa-shrimp text-4xl mb-3"></i>
-                        <p class="text-xs uppercase tracking-wider">Gambas Royales</p>
+        <!-- ====== CATÉGORIE : FAST FOOD ====== -->
+        <div class="mb-16">
+            <h3 class="category-title font-serif text-3xl font-bold text-white text-center">🍔 Fast Food</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+                
+                <!-- Pizza -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop" alt="Pizza" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-pizza-slice"></i><span style="font-size:12px;margin-top:4px;">Pizza</span></div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-serif text-xl font-bold">Pizza Royale</h3>
+                                <span class="text-amber-500 font-bold">4 000 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-sm mb-6">Pizza croustillante garnie de sauce tomate, mozzarella, jambon, champignons et olives.</p>
+                        </div>
+                        <button onclick="addToCart('Pizza Royale', 4000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                        </button>
                     </div>
                 </div>
-                <div class="p-6 flex flex-col flex-grow justify-between">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-serif text-xl font-bold">Risotto de Gambas Royales</h3>
-                            <span class="text-amber-500 font-bold">12 000 F</span>
-                        </div>
-                        <p class="text-neutral-400 text-sm mb-6">Risotto crémeux lié au parmesan de 24 mois, flambé au Cognac.</p>
+
+                <!-- Hamburger -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container">
+                        <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop" alt="Hamburger" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-burger"></i><span style="font-size:12px;margin-top:4px;">Burger</span></div>
                     </div>
-                    <button onclick="addToCart('Risotto de Gambas Royales', 12000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
-                    </button>
+                    <div class="p-6 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-serif text-xl font-bold">Hamburger Deluxe</h3>
+                                <span class="text-amber-500 font-bold">3 500 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-sm mb-6">Steak haché 100% bœuf, cheddar, laitue, tomate, oignons et sauce maison, servi avec frites.</p>
+                        </div>
+                        <button onclick="addToCart('Hamburger Deluxe', 3500)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Plat 3 -->
-            <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
-                <div class="relative h-64 bg-neutral-800 flex items-center justify-center group overflow-hidden">
-                    <div class="text-center p-6 text-neutral-500 group-hover:text-amber-500 transition-colors">
-                        <i class="fa-solid fa-ice-cream text-4xl mb-3"></i>
-                        <p class="text-xs uppercase tracking-wider">Dessert Signature</p>
+        <!-- ====== CATÉGORIE : DESSERTS ====== -->
+        <div class="mb-16">
+            <h3 class="category-title font-serif text-3xl font-bold text-white text-center">🍰 Desserts</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+                
+                <!-- Dèguè avec image depuis Savourous -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container">
+                        <img src="src/degue.jpg" alt="Dèguè Traditionnel" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-bowl-food"></i><span style="font-size:12px;margin-top:4px;">Dèguè</span></div>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-serif text-xl font-bold">Dèguè Traditionnel</h3>
+                                <span class="text-amber-500 font-bold">1 500 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-sm mb-6">Délicieux yaourt sucré au mil, arrosé de sirop et accompagné de boulettes de mil.</p>
+                        </div>
+                        <button onclick="addToCart('Dèguè Traditionnel', 1500)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                        </button>
                     </div>
                 </div>
-                <div class="p-6 flex flex-col flex-grow justify-between">
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-serif text-xl font-bold">Sphère Chocolat & Or</h3>
-                            <span class="text-amber-500 font-bold">5 000 F</span>
-                        </div>
-                        <p class="text-neutral-400 text-sm mb-6">Chocolat noir intense, cœur coulant caramel beurre salé et feuilles d'or.</p>
+
+                <!-- Yaourt Frais -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container">
+                        <img src="src/yaourt_frais.jpg" alt="Yaourt Frais" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-bowl-food"></i><span style="font-size:12px;margin-top:4px;">Yaourt</span></div>
                     </div>
-                    <button onclick="addToCart('Sphère Chocolat & Or', 5000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
-                    </button>
+                    <div class="p-6 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-serif text-xl font-bold">Yaourt Frais</h3>
+                                <span class="text-amber-500 font-bold">1 000 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-sm mb-6">Yaourt onctueux, servi avec du miel et des fruits frais de saison.</p>
+                        </div>
+                        <button onclick="addToCart('Yaourt Frais', 1000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter au panier
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== CATÉGORIE : BOISSONS ====== -->
+        <div class="mb-16">
+            <h3 class="category-title font-serif text-3xl font-bold text-white text-center">🥤 Boissons</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+                
+                <!-- Jus Orange -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container h-40">
+                        <img src="https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=400&h=200&fit=crop" alt="Jus Orange" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-glass-water"></i><span style="font-size:12px;margin-top:4px;">Orange</span></div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-serif text-lg font-bold">Jus d'Orange</h3>
+                                <span class="text-amber-500 font-bold">1 000 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-xs">100% pur jus frais pressé.</p>
+                        </div>
+                        <button onclick="addToCart('Jus d\'Orange', 1000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-2 rounded-xl transition-all flex items-center justify-center gap-2 mt-3">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Jus Ananas -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container h-40">
+                        <img src="https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&h=200&fit=crop" alt="Jus Ananas" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-glass-water"></i><span style="font-size:12px;margin-top:4px;">Ananas</span></div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-serif text-lg font-bold">Jus d'Ananas</h3>
+                                <span class="text-amber-500 font-bold">1 000 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-xs">Doux et rafraîchissant.</p>
+                        </div>
+                        <button onclick="addToCart('Jus d\'Ananas', 1000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-2 rounded-xl transition-all flex items-center justify-center gap-2 mt-3">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Jus Pomme -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container h-40">
+                        <img src="https://images.unsplash.com/photo-1613478223719-2ab802602423?w=400&h=200&fit=crop" alt="Jus Pomme" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-glass-water"></i><span style="font-size:12px;margin-top:4px;">Pomme</span></div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-serif text-lg font-bold">Jus de Pomme</h3>
+                                <span class="text-amber-500 font-bold">1 000 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-xs">Naturellement sucré et désaltérant.</p>
+                        </div>
+                        <button onclick="addToCart('Jus de Pomme', 1000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-2 rounded-xl transition-all flex items-center justify-center gap-2 mt-3">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Jus Bissap -->
+                <div class="hover-trigger bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden hover-target transition-all duration-300 flex flex-col h-full">
+                    <div class="menu-img-container h-40">
+                        <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400&h=200&fit=crop" alt="Jus Bissap" class="menu-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="food-icon" style="display:none;"><i class="fa-solid fa-glass-water"></i><span style="font-size:12px;margin-top:4px;">Bissap</span></div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-serif text-lg font-bold">Jus de Bissap</h3>
+                                <span class="text-amber-500 font-bold">1 000 F</span>
+                            </div>
+                            <p class="text-neutral-400 text-xs">Boisson traditionnelle à base de fleurs d'hibiscus.</p>
+                        </div>
+                        <button onclick="addToCart('Jus de Bissap', 1000)" class="w-full bg-neutral-800 hover:bg-amber-500 hover:text-black text-white font-semibold py-2 rounded-xl transition-all flex items-center justify-center gap-2 mt-3">
+                            <i class="fa-solid fa-plus text-sm"></i> Ajouter
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ====== PANIER ====== -->
+    <!-- ============================================ -->
+    <!-- PANIER                                      -->
+    <!-- ============================================ -->
     <div id="cart-drawer" class="fixed top-0 right-0 bottom-0 w-full max-w-md bg-neutral-950 border-l border-neutral-800 z-50 transform translate-x-full transition-transform duration-500 flex flex-col shadow-2xl">
         <div class="p-6 border-b border-neutral-800 flex justify-between items-center">
             <h3 class="text-xl font-bold font-serif text-amber-500">Votre Sélection</h3>
@@ -418,7 +643,9 @@
         </div>
     </div>
 
-    <!-- ====== MODAL RÉSERVATION ====== -->
+    <!-- ============================================ -->
+    <!-- MODAL RÉSERVATION                            -->
+    <!-- ============================================ -->
     <div id="reservation-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-neutral-900 border border-neutral-800 w-full max-w-lg rounded-2xl p-6 md:p-8 animate-fade-in relative max-h-[90vh] overflow-y-auto">
             <button onclick="closeReservationModal()" class="absolute top-4 right-4 text-neutral-400 hover:text-white">
@@ -490,7 +717,9 @@
         </div>
     </div>
 
-    <!-- ====== MODAL REÇU ====== -->
+    <!-- ============================================ -->
+    <!-- MODAL REÇU                                   -->
+    <!-- ============================================ -->
     <div id="receipt-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
         <div class="bg-neutral-900 border-2 border-amber-500/50 w-full max-w-md rounded-2xl p-6 animate-fade-in relative shadow-2xl">
             <h3 class="font-serif text-2xl font-bold text-amber-500 text-center mb-4"><i class="fa-solid fa-receipt"></i> Reçu de Paiement</h3>
@@ -511,12 +740,10 @@
         </div>
     </div>
 
+    <!-- ============================================ -->
+    <!-- JAVASCRIPT                                  -->
+    <!-- ============================================ -->
     <script>
-        // ============================================
-        //  CONFIGURATION (plus d'IP locale, tout est distant)
-        // ============================================
-        // Pas besoin de CAMERA_CONFIG, le WebSocket se connecte au serveur
-
         // ============================================
         //  GESTION DU FLUX VIDÉO (WEBSOCKET)
         // ============================================
@@ -529,13 +756,11 @@
             const error = document.getElementById('camera-error');
             const statusText = document.getElementById('camera-status-text');
             
-            // Afficher le chargement
             loading.classList.remove('hidden');
             error.classList.add('hidden');
             img.style.display = 'none';
             statusText.textContent = 'CONNEXION...';
             
-            // Connexion WebSocket
             const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
             ws = new WebSocket(protocol + window.location.host);
             
@@ -548,7 +773,6 @@
             };
             
             ws.onmessage = function(event) {
-                // Les données JPEG arrivent en binaire
                 const blob = new Blob([event.data], {type: 'image/jpeg'});
                 const url = URL.createObjectURL(blob);
                 img.src = url;
@@ -574,7 +798,6 @@
                 statusText.textContent = 'RECONNEXION...';
                 document.querySelector('.camera-status .dot').style.animation = 'none';
                 
-                // Reconnexion automatique
                 setTimeout(() => {
                     if (!document.getElementById('camera-section').classList.contains('hidden')) {
                         connectToCameraStream();
@@ -588,12 +811,10 @@
             section.classList.toggle('hidden');
             
             if (!section.classList.contains('hidden')) {
-                // Afficher l'overlay d'authentification
                 document.getElementById('camera-auth-overlay').classList.remove('hidden');
                 document.getElementById('camera-loading').classList.add('hidden');
                 document.getElementById('camera-error').classList.add('hidden');
             } else {
-                // Fermer la connexion WebSocket
                 if (ws) {
                     ws.close();
                     ws = null;
@@ -627,7 +848,7 @@
         }
 
         // ============================================
-        //  VOTRE CODE EXISTANT (PANIER, RÉSERVATIONS, ETC.)
+        //  PANIER
         // ============================================
         let cart = [];
         let deliveryMode = 'emporter';
@@ -884,7 +1105,7 @@
             const subTotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
             const totalFinal = subTotal + extraFee;
 
-            let receipt = `🧾 L'ÉTOILE NOIRE BAMAKO\n`;
+            let receipt = `🧾 SMART RESTO BAMAKO\n`;
             receipt += `-----------------------------\n`;
             receipt += `REÇU DE COMMANDE\n`;
             receipt += `Client : ${name}\n`;
@@ -935,7 +1156,7 @@
 
             const totalPrice = parseInt(tables) * 500;
 
-            let receipt = `🧾 L'ÉTOILE NOIRE BAMAKO\n`;
+            let receipt = `🧾 SMART RESTO BAMAKO\n`;
             receipt += `-----------------------------\n`;
             receipt += `REÇU DE RÉSERVATION DE TABLE\n`;
             receipt += `Client : ${name}\n`;
